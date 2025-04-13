@@ -1,0 +1,89 @@
+name: "Create Releases and Upload Assets"
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    publish-package:
+        permissions:
+            contents: write
+        strategy:
+            fail-fast: false
+
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v4
+              name: Install pnpm
+              with:
+                  version: 8
+                  run_install: false
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "pnpm"
+
+            - name: install dependencies
+              run: pnpm install
+
+            - name: build
+              run: |
+                  pnpm run build
+                  pnpm run pkg
+
+            - name: Extract version from package.json
+              id: extract_version
+              run: |
+                  echo "PKG_VERSION=$(jq -r '.version' package.json)" >> $GITHUB_ENV
+
+            - name: Extract release body from package.json
+              id: extract_release_body
+              run: |
+                  echo "RELEASE_BODY=$(jq -r '.releaseBody' package.json)" >> $GITHUB_ENV
+
+            - name: Create Draft Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ env.PKG_VERSION }}
+                  release_name: Release ${{ env.PKG_VERSION }}
+                  body: ${{ env.RELEASE_BODY }}
+                  draft: true
+                  prerelease: false
+
+            - name: Upload Release Asset Linux
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./bin/ipfs-user-node-linux
+                  asset_name: ipfs-user-node-linux-${{ env.PKG_VERSION }}
+                  asset_content_type: application/octet-stream
+
+            - name: Upload Release Asset Windows
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./bin/ipfs-user-node-win.exe
+                  asset_name: ipfs-user-node-windows-${{ env.PKG_VERSION }}.exe
+                  asset_content_type: application/octet-stream
+
+            - name: Upload Release Asset Mac
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./bin/ipfs-user-node-macos
+                  asset_name: ipfs-user-node-macos-${{ env.PKG_VERSION }}
+                  asset_content_type: application/octet-stream
