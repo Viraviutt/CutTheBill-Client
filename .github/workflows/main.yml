@@ -64,8 +64,8 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./bin/ipfs-user-node-linux
-                  asset_name: ipfs-user-node-linux-${{ env.PKG_VERSION }}
+                  asset_path: ./bin/cutthebill-client-linux
+                  asset_name: cutthebill-client-linux-${{ env.PKG_VERSION }}
                   asset_content_type: application/octet-stream
 
             - name: Upload Release Asset Windows
@@ -74,8 +74,8 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./bin/ipfs-user-node-win.exe
-                  asset_name: ipfs-user-node-windows-${{ env.PKG_VERSION }}.exe
+                  asset_path: ./bin/cutthebill-client-win.exe
+                  asset_name: cutthebill-client-windows-${{ env.PKG_VERSION }}.exe
                   asset_content_type: application/octet-stream
 
             - name: Upload Release Asset Mac
@@ -84,6 +84,6 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./bin/ipfs-user-node-macos
-                  asset_name: ipfs-user-node-macos-${{ env.PKG_VERSION }}
+                  asset_path: ./bin/cutthebill-client-macos
+                  asset_name: cutthebill-client-macos-${{ env.PKG_VERSION }}
                   asset_content_type: application/octet-stream
