@@ -7,7 +7,9 @@ export default [
 	{ languageOptions: { globals: globals.node } },
 	pluginJs.configs.recommended,
 	...tseslint.configs.recommended,
-	{ rules: {} },
+	{ rules: {
+		"@typescript-eslint/no-explicit-any": "off"
+	} },
     {
         ignores: ["dist/*"]
     }
