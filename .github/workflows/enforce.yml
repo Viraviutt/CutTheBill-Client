@@ -1,0 +1,62 @@
+name: Restrict Branch Merges
+
+on:
+  pull_request:
+    branches:
+      - main
+      - p/**
+      - r/**
+
+jobs:
+  check_base_branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Git Flow
+        run: |
+          source="${{ github.event.pull_request.head.ref }}"
+          target="${{ github.event.pull_request.base.ref }}"
+
+          SRC_PIPELINE=$(echo "$source" | cut -d'/' -f1)
+          SRC_VERSION=$(echo "$source" | cut -d'/' -f2)
+          SRC_ENVIROMENT=$(echo "$source" | cut -d'/' -f3)
+          if [[ "$SRC_PIPELINE" == "r" ]]; then
+          SRC_ENVIROMENT="prod"
+          fi
+
+          TRG_PIPELINE=$(echo "$target" | cut -d'/' -f1)
+          TRG_VERSION=$(echo "$target" | cut -d'/' -f2)
+          TRG_ENVIROMENT=$(echo "$target" | cut -d'/' -f3)
+          if [[ "$TRG_PIPELINE" == "r" ]]; then
+          TRG_ENVIROMENT="prod"
+          fi
+
+          echo "SOURCE: $source TARGET: $target"
+          echo "PIPELINE: $SRC_PIPELINE -> $TRG_PIPELINE"
+          echo "VERSION: $SRC_VERSION -> $TRG_VERSION"
+          echo "ENVIROMENT: $SRC_ENVIROMENT -> $TRG_ENVIROMENT"
+
+          if [[ "$source" == "main" && "$TRG_ENVIROMENT" == "prod" ]]; then
+              exit 0
+          elif [[ "$source" == "main" && "$TRG_ENVIROMENT" != "prod" ]]; then
+              echo "main can only merge to realease r branches"
+              exit 1
+          elif [[ "$target" == "main" && "$SRC_ENVIROMENT" == "qa" ]]; then
+              echo "OK"
+              exit 0
+          elif [[ "$target" == "main" && "$source" == "root" ]]; then
+              echo "OK"
+              exit 0
+          elif [[ "$target" == "main" && "$SRC_ENVIROMENT" != "qa" ]]; then
+              echo "Must merge to main from QA $SRC_VERSION -> $TRG_VERSION"
+              exit 1
+          elif [[ "$SRC_VERSION" != "$TRG_VERSION" ]]; then
+              echo "Version mismatch $SRC_VERSION -> $TRG_VERSION"
+              exit 1
+          elif [[ "$TRG_ENVIROMENT" == "qa" && "$SRC_ENVIROMENT" != "dev" ]]; then
+              echo "Must merge to QA from Dev $SRC_VERSION -> $TRG_VERSION"
+              exit 1
+          else
+              echo "OK"
+              exit 0
+          fi
